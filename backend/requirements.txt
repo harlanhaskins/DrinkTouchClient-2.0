@@ -1,2 +1,3 @@
 requests>=2.5.1
 selenium>=2.44.0
+pyserial>=2.7
