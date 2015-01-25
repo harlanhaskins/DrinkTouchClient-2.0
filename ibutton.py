@@ -15,14 +15,14 @@ user = None
 
 def read_config():
     with open('config.json') as config_file:
-        return json.load(cofig_file)
+        return json.load(config_file)
 
 """
 Initializes the serial connection on the first avalaible serial connection.
 
 If no serial connection is avalaible an exception is thrown
 """
-def init_serial(ibuton_address, rfid_address):
+def init_serial(ibutton_address, rfid_address):
     # TODO: Read from config file.
     ibutton_serial = serial.Serial(ibutton_address)
     rfid_serial = serial.Serial(rfid_address)
