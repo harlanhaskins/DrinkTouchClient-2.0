@@ -3,6 +3,7 @@
 import browser
 import serial
 import json
+import argparse
 from User import User
 
 #Serial connection to ibutton reader
@@ -32,12 +33,19 @@ def read_ibutton(debug=False):
         with open("ibutton.txt") as ibutton_file:
             return ibutton_file.readline().strip()
 
-def main():
+def main(debug=False, verbose=False):
     config = read_config()
-    init_serial(config['ibutton_address'], config['rfid_address'])
-    ibutton_id = read_ibutton()
+    if not debug:
+        init_serial(config['ibutton_address'], config['rfid_address'])
+    ibutton_id = read_ibutton(debug=debug)
     user = User(ibutton_id)
     browser.open_url("http://webdrink.csh.rit.edu/kiosk/" + user.username)
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-d", "--debug", help="read input from ibutton.txt",
+                        action="store_true")
+    parser.add_argument("-v", "--verbose", help="prints verbose logs",
+                        action="store_true")
+    args = parser.parse_args()
+    main(debug=args.debug, verbose=args.verbose)
