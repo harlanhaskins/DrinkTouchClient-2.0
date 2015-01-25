@@ -11,6 +11,14 @@ To install the python dependencies:
 pip install -r requirements.txt
 ```
 
+You'll need to create a `config.json` file. Just
+
+```bash
+cp config.json.example config.json
+```
+
+and replace the relevant values.
+
 # Contributors
 
 [Harlan Haskins](http://harlanhaskins.com) ([@harlanhaskins](https://github.com/harlanhaskins))
