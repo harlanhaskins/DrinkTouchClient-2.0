@@ -1,5 +1,7 @@
 #iButton Interpretation from Serial Input
 
-import
+import browser
+import serial
+import requests
 
 
