@@ -25,10 +25,9 @@ def read_ibutton():
         return ibutton_file.readline().strip()
 
 def main():
-    #ibutton_id = ser.readline()
     ibutton_id = read_ibutton()
     user = User(ibutton_id)
-    browser.open_url("http://google.com/" + user.username)
+    browser.open_url("http://webdrink.csh.rit.edu/kiosk/" + user.username)
 
 if __name__ == "__main__":
     main()
