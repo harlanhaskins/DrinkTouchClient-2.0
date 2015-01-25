@@ -4,7 +4,7 @@ from selenium import webdriver
 
 browser = webdriver.Firefox()
 
-def openUrl(url):
+def open_url(url):
     browser.get(url)
 
 #browser.get("http://rit.edu")
@@ -12,4 +12,4 @@ def openUrl(url):
 
 while(True):
     time.sleep(4)
-    openUrl("http://rit.edu")
+    open_url("http://rit.edu")
