@@ -1,51 +1,16 @@
-#iButton Interpretation from Serial Input
-
-import browser
 import serial
-import json
-import argparse
-from User import User
 
-#Serial connection to ibutton reader
-ibutton_serial = None
-rfid_serial = None
+class iButton(object):
 
+    def __init__(self, ibutton_address, rfid_address, debug=False):
+        # self.ibutton_serial = serial.Serial(ibutton_address)
+        self.rfid_serial = serial.Serial(rfid_address)
+        self.debug = debug
 
-#User object
-user = None
+    def read(self):
+        global rfid_serial
+        if self.debug:
+            with open("ibutton.txt") as ibutton_file:
+                return ibutton_file.readline().strip()
+        return self.rfid_serial.read(20)
 
-def read_config():
-    with open('config.json') as config_file:
-        return json.load(config_file)
-
-"""
-Initializes the serial connection on the first avalaible serial connection.
-
-If no serial connection is avalaible an exception is thrown
-"""
-def init_serial(ibutton_address, rfid_address):
-    # TODO: Read from config file.
-    ibutton_serial = serial.Serial(ibutton_address)
-    rfid_serial = serial.Serial(rfid_address)
-
-def read_ibutton(debug=False):
-    if debug:
-        with open("ibutton.txt") as ibutton_file:
-            return ibutton_file.readline().strip()
-
-def main(debug=False, verbose=False):
-    config = read_config()
-    if not debug:
-        init_serial(config['ibutton_address'], config['rfid_address'])
-    ibutton_id = read_ibutton(debug=debug)
-    user = User(ibutton_id)
-    browser.open_url("http://webdrink.csh.rit.edu/kiosk/" + user.username)
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-d", "--debug", help="read input from ibutton.txt",
-                        action="store_true")
-    parser.add_argument("-v", "--verbose", help="prints verbose logs",
-                        action="store_true")
-    args = parser.parse_args()
-    main(debug=args.debug, verbose=args.verbose)
