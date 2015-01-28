@@ -15,15 +15,18 @@ class User(object):
     def __init__(self, ibutton_id):
         r = requests.get(BASE_URL, params={"ibutton": ibutton_id})
 
-        user = r.json()
+        try:
+            user = r.json()
 
-        self.username = user['uid']
-        self.drink_credits = user['credits']
-        self.display_name = user['cn']
-        self.ibutton_id = ibutton_id
-        self.is_drink_admin = user['drinkAdmin']
+            self.username = user['uid']
+            self.drink_credits = user['credits']
+            self.display_name = user['cn']
+            self.ibutton_id = ibutton_id
+            self.is_drink_admin = user['drinkAdmin']
+            print(self)
+        except ValueError:
+            print("Could not find user for iButton %s" % ibutton_id)
 
-        print(self)
 
     def __repr__(self):
         string = self.display_name
