@@ -3,7 +3,7 @@ A new touchscreen client for Drink and Little Drink
 
 # Installation
 
-This project depends on `requests` and `selenium`
+This project depends on `pyserial`, `spynner`, and `argparse`
 
 To install the python dependencies:
 

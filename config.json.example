@@ -1,5 +1,6 @@
 {
-  "ibutton_address": "/dev/tty0",
-  "rfid_address": "/dev/tty1",
-  "drink_api_key": "6aac5834ab584677e41346a91bee95c0"
+  "ibutton_address": "/dev/ttyAMA1",
+  "rfid_address": "/dev/ttyAMA0",
+  "drink_api_key": "6aac5834ab584677e41346a91bee95c0",
+  "machine_id": 1
 }

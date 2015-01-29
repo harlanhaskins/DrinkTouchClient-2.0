@@ -3,10 +3,8 @@ import json
 import argparse
 import spynner
 from ibutton import iButton
-from User import User
 
 browser = spynner.Browser(debug_level=spynner.DEBUG)
-browser.load("http://webdrink.csh.rit.edu/")
 browser.create_webview()
 browser.webview.showFullScreen()
 
@@ -16,12 +14,13 @@ def read_config():
 
 def main(debug=False, verbose=False):
     config = read_config()
+    browser.load("https://webdrink.csh.rit.edu/touchscreen/?machine_id=%d" %
+            config['machine_id'])
     ibutton = iButton(config['ibutton_address'], config['rfid_address'],
                       debug=debug)
     print("reading...")
     ibutton_id = ibutton.read()
     print("found ibutton: %s" % ibutton_id)
-    user = User(ibutton_id)
     browser.runjs("alert('Logged in as %s')" % user.username)
 
 if __name__ == "__main__":
