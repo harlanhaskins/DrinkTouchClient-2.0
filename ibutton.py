@@ -18,4 +18,3 @@ class iButton(object):
                 return code
             code += byte
             print("read: %s" % byte)
-

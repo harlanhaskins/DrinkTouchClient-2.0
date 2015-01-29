@@ -24,10 +24,11 @@ def main(debug=False, verbose=False):
     user = User(ibutton_id)
     browser.runjs("alert('Logged in as %s')" % user.username)
 
-parser = argparse.ArgumentParser()
-parser.add_argument("-d", "--debug", help="read input from ibutton.txt",
-                    action="store_true")
-parser.add_argument("-v", "--verbose", help="prints verbose logs",
-                    action="store_true")
-args = parser.parse_args()
-main(debug=args.debug, verbose=args.verbose)
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-d", "--debug", help="read input from ibutton.txt",
+                        action="store_true")
+    parser.add_argument("-v", "--verbose", help="prints verbose logs",
+                        action="store_true")
+    args = parser.parse_args()
+    main(debug=args.debug, verbose=args.verbose)
