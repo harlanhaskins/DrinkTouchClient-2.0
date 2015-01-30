@@ -15,7 +15,7 @@ class iButton(object):
         while True:
             byte = self.rfid_serial.read()
             code = code.strip()
-            if len()==13:
+            if len(code)==13:
                 return code[1:]
             code += byte
             print("Reading ID: %s" % code)
