@@ -20,7 +20,7 @@ def main(debug=False, verbose=False):
                       debug=debug)
     print("reading...")
     ibutton_id = ibutton.read()
-    print("found ibutton: %s" % ibutton_id)
+    print("found ibutton: '%s'" % ibutton_id)
     browser.runjs("alert('Logged in as %s')" % user.username)
 
 if __name__ == "__main__":
