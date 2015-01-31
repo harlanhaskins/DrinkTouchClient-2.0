@@ -3,6 +3,7 @@ import json
 import argparse
 import spynner
 from ibutton import iButton
+from multiprocessing import Pool
 
 browser = spynner.Browser(debug_level=spynner.DEBUG)
 browser.create_webview()
@@ -16,13 +17,17 @@ def main(debug=False, verbose=False):
     config = read_config()
     browser.load("https://webdrink.csh.rit.edu/touchscreen/?machine_id=%d" %
             config['machine_id'])
+    p = Process(target=start_reading)
+    p.start()
+
+def start_reading():
     while(True):
         ibutton = iButton(config['ibutton_address'], config['rfid_address'],
                         debug=debug)
         print("reading...")
         ibutton_id = ibutton.read()
         print("found ibutton: '%s'" % ibutton_id)
-        browser.runjs("alert('Logged in as %s')" % ibutton_id)
+        browser.runjs("app.loadiButton(\"%s\");" % ibutton_id)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
