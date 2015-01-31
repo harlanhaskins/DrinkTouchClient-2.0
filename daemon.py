@@ -5,49 +5,61 @@ import time
 from ibutton import iButton
 from threading import Thread, Lock
 
-browser = spynner.Browser()
-browser.create_webview()
-browser.show()
-# browser.webview.showFullScreen()
 
-js_to_run = None
-js_lock = Lock()
+class Daemon():
 
-def read_config():
+    def __init__(self, config, debug=False):
+        self.config = config
+        self.debug = debug
+        self._js_to_run = None
+        self._js_lock = Lock()
+        self._closing = False
+        self.read_thread = Thread(target=start_reading,
+                                  args=(config, browser, debug,))
+        self.browser = spynner.Browser()
+
+    def loop():
+        try:
+            self.browser.create_webview()
+            self.browser.webview.showFullScreen()
+            self.browser.load(config['machine_url'])
+            self.read_thread.start()
+            self.browse()
+        except KeyboardInterrupt:
+            self.stop()
+
+    def stop():
+        self._closing = True
+        p.close()
+        self.browser.hide()
+
+    def _run_js(self):
+        with js_lock:
+            browser.runjs(js_to_run)
+            js_to_run = None
+
+    def browse(self):
+        while not self._closing:
+            if self.js_to_run:
+                self._run_js()
+            browser._events_loop()
+
+    def set_js(self, js):
+        with js_lock:
+            self.js_to_run = js
+
+    def start_reading(self):
+        while(True):
+            ibutton = iButton(self.config['ibutton_address'], self.config['rfid_address'],
+                            debug=self.config.debug)
+            print("reading...")
+            ibutton_id = ibutton.read()
+            print("found ibutton: '%s'" % ibutton_id)
+            self.set_js("app.loadiButton(\"%s\");" % ibutton_id)
+
+def read_config(cls):
     with open('config.json') as config_file:
         return json.load(config_file)
-
-def main(debug=False, verbose=False):
-    config = read_config()
-    browser.load("https://webdrink.csh.rit.edu/touchscreen/?machine_id=%d" %
-            config['machine_id'])
-    p = Thread(target=start_reading, args=(config, browser, debug,))
-    p.start()
-    browse()
-
-def browse():
-    global js_to_run
-    while True:
-        if js_to_run:
-            with js_lock:
-                print("running %s" % js_to_run)
-                browser.runjs(js_to_run)
-                js_to_run = None
-        browser._events_loop()
-
-def run_js(js):
-    global js_to_run
-    with js_lock:
-        js_to_run = js
-
-def start_reading(config, browser, debug):
-    while(True):
-        ibutton = iButton(config['ibutton_address'], config['rfid_address'],
-                        debug=debug)
-        print("reading...")
-        ibutton_id = ibutton.read()
-        print("found ibutton: '%s'" % ibutton_id)
-        run_js("app.loadiButton(\"%s\");" % ibutton_id)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -56,4 +68,6 @@ if __name__ == "__main__":
     parser.add_argument("-v", "--verbose", help="prints verbose logs",
                         action="store_true")
     args = parser.parse_args()
-    main(debug=args.debug, verbose=args.verbose)
+    config = read_config()
+    daemon = Daemon(config, debug=args.debug)
+

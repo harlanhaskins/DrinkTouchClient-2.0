@@ -1,4 +1,5 @@
 import serial
+from threading import Thread
 
 class iButton(object):
 
@@ -6,11 +7,17 @@ class iButton(object):
         # self.ibutton_serial = serial.Serial(ibutton_address)
         self.rfid_serial = serial.Serial(rfid_address)
         self.debug = debug
+        self.rfid_thread = Thread(target=read_rfid)
+        self.ibutton_thread = Thread(target=read_ibutton)
+        self.rfid_thread.start()
+        self.ibutton_thread.start()
 
-    def read(self):
+    def read_ibutton(self):
         if self.debug:
             with open("ibutton.txt") as ibutton_file:
                 return ibutton_file.readline().strip()
+
+    def read_serial(self):
         code = ''
         while True:
             byte = self.rfid_serial.read()
@@ -18,4 +25,7 @@ class iButton(object):
             if len(code)==13:
                 return code[1:]
             code += byte
-            print("Reading ID: %s" % code)
+
+    def read(self):
+        self.rfid_thread.join()
+        self.ibutton_thread.join()
