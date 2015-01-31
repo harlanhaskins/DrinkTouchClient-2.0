@@ -21,7 +21,7 @@ def main(debug=False, verbose=False):
     print("reading...")
     ibutton_id = ibutton.read()
     print("found ibutton: '%s'" % ibutton_id)
-    browser.runjs("alert('Logged in as %s')" % user.username)
+    browser.runjs("alert('Logged in as %s')" % ibutton_id)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
