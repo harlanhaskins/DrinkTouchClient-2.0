@@ -16,12 +16,13 @@ def main(debug=False, verbose=False):
     config = read_config()
     browser.load("https://webdrink.csh.rit.edu/touchscreen/?machine_id=%d" %
             config['machine_id'])
-    ibutton = iButton(config['ibutton_address'], config['rfid_address'],
-                      debug=debug)
-    print("reading...")
-    ibutton_id = ibutton.read()
-    print("found ibutton: '%s'" % ibutton_id)
-    browser.runjs("alert('Logged in as %s')" % ibutton_id)
+    while(True):
+        ibutton = iButton(config['ibutton_address'], config['rfid_address'],
+                        debug=debug)
+        print("reading...")
+        ibutton_id = ibutton.read()
+        print("found ibutton: '%s'" % ibutton_id)
+        browser.runjs("alert('Logged in as %s')" % ibutton_id)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
