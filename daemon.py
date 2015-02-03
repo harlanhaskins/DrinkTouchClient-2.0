@@ -2,7 +2,7 @@ import json
 import argparse
 import spynner
 import time
-from ibutton import iButton
+from ibutton import iButton, RFID
 from threading import Thread, Lock
 
 daemon = None
@@ -15,56 +15,55 @@ class Daemon():
         self._js_to_run = None
         self._js_lock = Lock()
         self._closing = False
-        self.ibutton = iButton(self.config['ibutton_address'],
-                        debug=self.config.debug)
+        # self.ibutton = iButton(self.config['ibutton_address'],
+                        # self,
+                        # debug=self.debug)
         self.rfid = RFID(self.config['rfid_address'],
-                        debug=self.config.debug)
+                        self,
+                        debug=self.debug)
         self.browser = spynner.Browser()
 
-    def loop():
+    def loop(self):
         try:
             self.browser.create_webview()
             self.browser.webview.showFullScreen()
             self.browser.load(config['machine_url'])
-            self.ibutton.start()
+            # self.ibutton.start()
             self.rfid.start()
             self.browse()
         except KeyboardInterrupt:
             self.stop()
 
-    def stop():
+    def stop(self):
         self._closing = True
         p.close()
         self.browser.hide()
-        self.ibutton.stop()
+        # self.ibutton.stop()
         self.rfid.stop()
 
+    def did_read_code(self, code):
+        self.set_js("app.loadiButton(\"%s\");" % code)
+        # self.ibutton.reset_code()
+        self.rfid.reset_code()
+
     def _run_js(self):
-        with js_lock:
-            browser.runjs(js_to_run)
-            js_to_run = None
+        with self._js_lock:
+            self.browser.runjs(self._js_to_run)
+            self._js_to_run = None
 
     def browse(self):
         while not self._closing:
-            if self.js_to_run:
+            if self._js_to_run:
                 self._run_js()
-            browser._events_loop()
+            self.browser._events_loop()
 
     def set_js(self, js):
-        with js_lock:
-            self.js_to_run = js
+        with self._js_lock:
+            self._js_to_run = js
 
-    def start_reading(self):
-        while(True):
-            print("reading...")
-
-def read_config(cls):
+def read_config():
     with open('config.json') as config_file:
         return json.load(config_file)
-
-def did_read_code(code):
-    daemon.set_js("app.loadiButton(\"%s\");" % code)
-    iButton
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -75,4 +74,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
     config = read_config()
     daemon = Daemon(config, debug=args.debug)
+    daemon.loop()
 

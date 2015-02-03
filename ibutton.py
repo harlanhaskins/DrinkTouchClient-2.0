@@ -3,19 +3,21 @@ import threading
 
 class Reader(object):
 
-    def __init__(self, address, target, debug=False):
+    def __init__(self, address, delegate, debug=False):
         self.serial = serial.Serial(address)
-        self._callback = target
-        self._thread = threading.Thread(target=read)
+        self.delegate = delegate
+        self._thread = threading.Thread(target=self.read)
         self._lock = threading.Lock()
         self.debug = debug
         self._closing = False
+        self.reset_code()
 
     def read(self):
         while not self.code_is_valid() or self._closing:
             with self._lock:
                 self._code += self.serial.read()
-        self._callback(self.formatted_code())
+        self.delegate.did_read_code(self.formatted_code())
+        self.read()
 
     def start(self):
         self._thread.start()
@@ -24,7 +26,7 @@ class Reader(object):
         self._closing = True
         self.reset_code()
 
-    def reset_code():
+    def reset_code(self):
         with self._lock:
             self._code = ""
 
