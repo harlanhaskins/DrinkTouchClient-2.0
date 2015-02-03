@@ -1,31 +1,49 @@
 import serial
-from threading import Thread
+import threading
 
-class iButton(object):
+class Reader(object):
 
-    def __init__(self, ibutton_address, rfid_address, debug=False):
-        # self.ibutton_serial = serial.Serial(ibutton_address)
-        self.rfid_serial = serial.Serial(rfid_address)
+    def __init__(self, address, target, debug=False):
+        self.serial = serial.Serial(address)
+        self._callback = target
+        self._thread = threading.Thread(target=read)
+        self._lock = threading.Lock()
         self.debug = debug
-        self.rfid_thread = Thread(target=read_rfid)
-        self.ibutton_thread = Thread(target=read_ibutton)
-        self.rfid_thread.start()
-        self.ibutton_thread.start()
-
-    def read_ibutton(self):
-        if self.debug:
-            with open("ibutton.txt") as ibutton_file:
-                return ibutton_file.readline().strip()
-
-    def read_serial(self):
-        code = ''
-        while True:
-            byte = self.rfid_serial.read()
-            code = code.strip()
-            if len(code)==13:
-                return code[1:]
-            code += byte
+        self._closing = False
 
     def read(self):
-        self.rfid_thread.join()
-        self.ibutton_thread.join()
+        while not self.code_is_valid() or self._closing:
+            with self._lock:
+                self._code += self.serial.read()
+        self._callback(self.formatted_code())
+
+    def start(self):
+        self._thread.start()
+
+    def stop(self):
+        self._closing = True
+        self.reset_code()
+
+    def reset_code():
+        with self._lock:
+            self._code = ""
+
+    def formatted_code(self):
+        return self._code # subclasses override
+
+    def code_is_valid(self):
+        return False # subclasses override
+
+class iButton(Reader):
+
+    def code_is_valid(self):
+        return len(self._code) == 16
+
+class RFID(Reader):
+
+    def code_is_valid(self):
+        return len(self._code) == 14
+
+    def formatted_code(self):
+        return self._code[1:]
+

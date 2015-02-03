@@ -5,6 +5,7 @@ import time
 from ibutton import iButton
 from threading import Thread, Lock
 
+daemon = None
 
 class Daemon():
 
@@ -14,8 +15,10 @@ class Daemon():
         self._js_to_run = None
         self._js_lock = Lock()
         self._closing = False
-        self.read_thread = Thread(target=start_reading,
-                                  args=(config, browser, debug,))
+        self.ibutton = iButton(self.config['ibutton_address'],
+                        debug=self.config.debug)
+        self.rfid = RFID(self.config['rfid_address'],
+                        debug=self.config.debug)
         self.browser = spynner.Browser()
 
     def loop():
@@ -23,7 +26,8 @@ class Daemon():
             self.browser.create_webview()
             self.browser.webview.showFullScreen()
             self.browser.load(config['machine_url'])
-            self.read_thread.start()
+            self.ibutton.start()
+            self.rfid.start()
             self.browse()
         except KeyboardInterrupt:
             self.stop()
@@ -32,6 +36,8 @@ class Daemon():
         self._closing = True
         p.close()
         self.browser.hide()
+        self.ibutton.stop()
+        self.rfid.stop()
 
     def _run_js(self):
         with js_lock:
@@ -50,16 +56,15 @@ class Daemon():
 
     def start_reading(self):
         while(True):
-            ibutton = iButton(self.config['ibutton_address'], self.config['rfid_address'],
-                            debug=self.config.debug)
             print("reading...")
-            ibutton_id = ibutton.read()
-            print("found ibutton: '%s'" % ibutton_id)
-            self.set_js("app.loadiButton(\"%s\");" % ibutton_id)
 
 def read_config(cls):
     with open('config.json') as config_file:
         return json.load(config_file)
+
+def did_read_code(code):
+    daemon.set_js("app.loadiButton(\"%s\");" % code)
+    iButton
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
