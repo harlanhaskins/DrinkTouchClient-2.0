@@ -1,3 +1,4 @@
 spynner
 pyserial
 argparse
+python-inotify

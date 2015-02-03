@@ -2,7 +2,7 @@ import json
 import argparse
 import spynner
 import time
-from ibutton import iButton, RFID
+from rfid import RFID
 from threading import Thread, Lock
 
 daemon = None
@@ -15,12 +15,9 @@ class Daemon():
         self._js_to_run = None
         self._js_lock = Lock()
         self._closing = False
-        # self.ibutton = iButton(self.config['ibutton_address'],
-                        # self,
-                        # debug=self.debug)
         self.rfid = RFID(self.config['rfid_address'],
-                        self,
-                        debug=self.debug)
+                         self.config['output_file'],
+                         debug=self.debug)
         self.browser = spynner.Browser()
 
     def loop(self):
@@ -28,7 +25,6 @@ class Daemon():
             self.browser.create_webview()
             self.browser.webview.showFullScreen()
             self.browser.load(config['machine_url'])
-            # self.ibutton.start()
             self.rfid.start()
             self.browse()
         except KeyboardInterrupt:
@@ -38,12 +34,10 @@ class Daemon():
         self._closing = True
         p.close()
         self.browser.hide()
-        # self.ibutton.stop()
         self.rfid.stop()
 
     def did_read_code(self, code):
         self.set_js("app.loadiButton(\"%s\");" % code)
-        # self.ibutton.reset_code()
         self.rfid.reset_code()
 
     def _run_js(self):
