@@ -1,44 +1,70 @@
-import json
 import argparse
 import spynner
+import serial
 import time
-from rfid import RFID
+import json
+import os
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
 from threading import Thread, Lock
 
 daemon = None
 
-class Daemon():
+input_dev = "/dev/ttyAMA0"
+output = "/tmp/ibutton"
 
-    def __init__(self, config, debug=False):
+ibutton_file = open(output, "w")
+rfid_serial = serial.Serial(input_dev)
+
+rfid_string = ""
+
+
+class Daemon(FileSystemEventHandler):
+
+    def __init__(self, config):
         self.config = config
-        self.debug = debug
         self._js_to_run = None
         self._js_lock = Lock()
         self._closing = False
-        self.rfid = RFID(self.config['rfid_address'],
-                         self.config['output_file'],
-                         debug=self.debug)
         self.browser = spynner.Browser()
+        self.observer = Observer()
+        output_file = config['output_file']
+        self.output_filename = os.path.basename(output_file)
+        self.output_dir = os.path.dirname(output_file)
+        self.observer.schedule(self, self.output_dir)
 
     def loop(self):
         try:
-            self.browser.create_webview()
-            self.browser.webview.showFullScreen()
-            self.browser.load(config['machine_url'])
-            self.rfid.start()
-            self.browse()
+            self.start()
         except KeyboardInterrupt:
             self.stop()
 
+    def start(self):
+        self.observer.start()
+        self.init_browser()
+        self.browse()
+
+    def on_modify(self, event):
+        print(event.src_path)
+        if not self.output_filename in event.srcpath:
+            return
+        with open(event.src_path) as ibutton_file:
+            ibutton = ibutton_file.readline()
+            self.did_read_code(ibutton)
+
+    def init_browser(self):
+        self.browser.create_webview()
+        self.browser.show()
+        # self.browser.webview.showFullScreen()
+        self.browser.load(config['machine_url'])
+
     def stop(self):
         self._closing = True
-        p.close()
         self.browser.hide()
-        self.rfid.stop()
+        self.observer.stop()
 
     def did_read_code(self, code):
         self.set_js("app.loadiButton(\"%s\");" % code)
-        self.rfid.reset_code()
 
     def _run_js(self):
         with self._js_lock:
@@ -55,18 +81,26 @@ class Daemon():
         with self._js_lock:
             self._js_to_run = js
 
+
 def read_config():
     with open('config.json') as config_file:
         return json.load(config_file)
 
+
+def read():
+    global rfid_string
+    for read_id in rfid_serial.read():
+        rfid_string += read_id
+        print rfid_string
+        if len(rfid_string) == 14:
+            print "Valid ID:" + rfid_string
+            rfid_string = ""
+            rfid_serial.flush()
+            break
+
+
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-d", "--debug", help="read input from ibutton.txt",
-                        action="store_true")
-    parser.add_argument("-v", "--verbose", help="prints verbose logs",
-                        action="store_true")
-    args = parser.parse_args()
     config = read_config()
-    daemon = Daemon(config, debug=args.debug)
+    daemon = Daemon(config)
     daemon.loop()
 
